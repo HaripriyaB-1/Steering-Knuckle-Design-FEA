@@ -1,0 +1,8 @@
+CAD model complete — all interfaces, fillets, material assigned
+
+- Baseline mass: 0.839 kg (AL_7075_T6)
+- All 5 interfaces: hub bore, UBJ, LBJ, tie rod, caliper
+- Fillets applied to all boss bases (5mm radius)
+- STEP exported for ANSYS import
+- Material: AL_7075_T6 (E=71700MPa, σ_y=503MPa)
+
