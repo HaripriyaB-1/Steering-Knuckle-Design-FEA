@@ -1,0 +1,260 @@
+  Load Case Derivation — Automotive Front Steering Knuckle
+
+**Author:** Haripriya B | SSN College of Engineering  
+**Component:** Front steering knuckle — double wishbone suspension  
+**Vehicle platform:** 1,400 kg front-wheel-drive passenger car  
+**Reference standards:** SAE J2862, ISO 8855 (vehicle dynamics)
+
+---
+
+ 1. What Is a Load Case?
+
+A load case is a specific combination of forces and directions that a 
+component must survive in real-world operation. For a steering knuckle, 
+load cases are derived from vehicle dynamics — the physics of how a car 
+accelerates, brakes, corners, and hits obstacles.
+
+Every force applied in ANSYS traces back to a derivable physical event. 
+Nothing is assumed arbitrarily.
+
+---
+
+2. Starting Point — Static Wheel Load
+
+Before any dynamic event, calculate what the wheel carries at rest.
+
+```
+Vehicle kerb mass              M  = 1,400 kg
+Front axle load distribution      = 60%
+Front axle total load          Mf = 1,400 × 0.60 = 840 kg
+Per front wheel static load    Ws = 840 / 2 = 420 kg
+
+Static wheel force:
+F_static = Ws × g = 420 × 9.81 = 4,120 N
+```
+
+Every dynamic load case is a multiple of this static value, 
+scaled by a g-factor derived from real-world testing and 
+industry standards.
+
+---
+
+   3. Load Case 1 — Bump (Vertical Impact)
+
+    Physical event
+The wheel strikes a pothole, speed bump, or kerb at speed. 
+The vertical force on the wheel spikes far above static for 
+a brief duration — this is the most severe vertical loading 
+the knuckle experiences.
+
+    G-factor rationale
+Industry standard for passenger car suspension design: **2.5g**  
+This covers the 99th percentile of real-world impact events 
+measured during proving ground testing over Belgian paving, 
+potholes, and kerb strikes.
+
+For context: Caterpillar construction equipment uses 3g–5g 
+because off-road terrain is far more severe.
+
+    Derivation
+```
+g_factor  = 2.5
+F_bump    = g_factor × F_static
+F_bump    = 2.5 × 9.81 × 420
+F_bump    = 10,300 N
+
+Direction: Vertical — downward (−Z axis)
+Applied at: Hub bore inner surface (wheel centre)
+```
+
+    Physical interpretation
+At the moment of impact, the knuckle must transfer 10,300 N 
+from the wheel hub through the main body into the upper and 
+lower ball joints and into the chassis. The lower ball joint 
+carries approximately 70% of this load — making it the 
+primary load path for bump events.
+
+---
+
+   4. Load Case 2 — Braking (Fore-Aft)
+
+    Physical event
+Maximum emergency braking with ABS engaged. The front wheels 
+are at the limit of traction — generating maximum braking force. 
+Weight transfers forward during braking, increasing front axle load.
+
+    G-factor rationale
+Maximum braking deceleration is limited by tyre-road friction:  
+**μ = 0.8–1.2 on dry tarmac**
+
+G-factor used: **1.2g** — represents ABS-limited braking on 
+dry road, the worst-case braking event for the front suspension.
+
+    Derivation
+```
+g_factor  = 1.2
+F_brake   = g_factor × F_static
+F_brake   = 1.2 × 9.81 × 420
+F_brake   = 4,945 N
+
+Direction: Fore-aft — rearward (−X axis)
+Applied at: Hub bore inner surface (wheel centre)
+```
+
+    Physical interpretation
+Braking force originates at the tyre contact patch at road 
+level, not at hub height. This creates a moment arm that 
+produces both a direct fore-aft force and a bending moment 
+at the hub. For this analysis, the force is applied directly 
+at hub centre — a standard simplification for static analysis 
+at this level of detail. The caliper mounting face also 
+experiences a torque reaction from braking — this is addressed 
+separately in the caliper interface design.
+
+---
+
+   5. Load Case 3 — Cornering (Lateral)
+
+    Physical event
+Maximum cornering at the limit of lateral tyre grip. 
+The outer front wheel (the knuckle being analysed) carries 
+significantly more lateral load than the inner wheel due 
+to weight transfer during the corner.
+
+    G-factor rationale
+Lateral grip limit for a performance passenger car on 
+dry tarmac: **1.2–1.5g**
+
+G-factor used: **1.5g** — represents maximum cornering 
+for a performance-oriented passenger car platform.
+
+    Derivation
+```
+g_factor  = 1.5
+F_corner  = g_factor × F_static
+F_corner  = 1.5 × 9.81 × 420
+F_corner  = 6,181 N
+
+Direction: Lateral — inward toward chassis (Y axis)
+Applied at: Hub bore inner surface (wheel centre)
+```
+
+    Physical interpretation
+The lateral force pushes the knuckle inward relative to 
+the wheel. This loads the ball joint bores in the lateral 
+direction — perpendicular to the bump load — and creates 
+bending in the main structural body. The tie rod attachment 
+also resists lateral loads through the steering system.
+
+---
+
+   6. Load Case 4 — Combined Worst-Case
+
+    Physical event
+Braking while cornering simultaneously — for example, 
+trail-braking at the entry to a corner. This is the actual 
+worst-case scenario because the knuckle is loaded in all 
+three directions at once. No real-world event isolates 
+a single load direction.
+
+    Derivation
+The three forces act in three mutually perpendicular directions. 
+Combined magnitude is calculated by vector addition:
+
+```
+F_combined = √(F_bump² + F_brake² + F_corner²)
+
+F_combined = √(10,300² + 4,945² + 6,181²)
+
+F_combined = √(106,090,000 + 24,453,025 + 38,204,161)
+
+F_combined = √168,747,186
+
+F_combined = 12,990 N ≈ 13,007 N resultant
+```
+
+    Why vector addition, not arithmetic addition?
+The three forces act in perpendicular directions (X, Y, Z). 
+Adding them directly (10,300 + 4,945 + 6,181 = 21,426 N) 
+would be wrong — it assumes all forces act in the same 
+direction simultaneously, which is physically impossible. 
+Vector addition correctly accounts for the perpendicular 
+geometry of the three load directions.
+
+    ANSYS application
+In the combined load case study, all three force components 
+are applied simultaneously at the hub bore:
+- Fx = −4,945 N (braking, rearward)
+- Fy = +6,181 N (cornering, lateral inward)  
+- Fz = −10,300 N (bump, downward)
+
+The solver resolves the resultant stress field from all 
+three acting together.
+
+---
+
+   7. Boundary Conditions
+
+    What is constrained and why
+
+**Fixed constraints — UBJ bore and LBJ bore (inner cylindrical surfaces)**
+
+The ball joints physically connect the knuckle to the 
+suspension arms which connect to the chassis. The chassis 
+is the ground reference — it does not move. Therefore the 
+ball joint bore surfaces are fixed: zero displacement, 
+zero rotation.
+
+**Free — hub bore**
+
+The hub bore is where loads are applied. It must be free 
+to deform under load — fixing it would over-constrain 
+the model and produce meaningless results.
+
+**Critical mistake to avoid:**
+Never fix the hub bore. In ANSYS, apply Remote Force or 
+Bearing Load at the hub bore surface — do not apply 
+Fixed Support there.
+
+    Physical analogy
+Think of holding a door handle (ball joints fixed to chassis) 
+and pushing the door (wheel force at hub). The handle is 
+fixed. The door swings. If you also fixed the point where 
+you push, the door couldn't move — and the stress field 
+would be wrong.
+
+---
+
+   8. Load Case Summary Table
+
+| Load Case | Fx (N) | Fy (N) | Fz (N) | Resultant (N) | G-factor |
+|-----------|--------|--------|--------|---------------|----------|
+| Bump | 0 | 0 | −10,300 | 10,300 | 2.5g |
+| Braking | −4,945 | 0 | 0 | 4,945 | 1.2g |
+| Cornering | 0 | +6,181 | 0 | 6,181 | 1.5g |
+| Combined | −4,945 | +6,181 | −10,300 | 13,007 | — |
+
+*Forces applied at hub bore centre. Positive X = forward, 
+Positive Y = outboard lateral, Positive Z = upward.*
+
+---
+
+   9. G-Factor Reference Table
+
+| Event | G-factor | Vehicle type |
+|-------|----------|--------------|
+| Normal driving bump | 1.0–1.5g | All |
+| Pothole at speed | 2.0–2.5g | Passenger car |
+| Kerb strike | 3.0–4.0g | Passenger car |
+| Off-road bump | 3.0–5.0g | Caterpillar / off-road |
+| Normal braking | 0.3–0.6g | All |
+| ABS braking (dry) | 0.8–1.2g | Passenger car |
+| Normal cornering | 0.3–0.8g | All |
+| Limit cornering (dry) | 1.2–1.5g | Performance car |
+
+---
+
+
+*Document prepared as part of the steering knuckle design 
+and FEA project. All calculations verified against 
+SAE J2862 vehicle dynamics reference.*
